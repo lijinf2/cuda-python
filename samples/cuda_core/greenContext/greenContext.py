@@ -53,6 +53,7 @@ they are not a hard scheduling promise.
 """
 
 import argparse
+import os
 import sys
 import time
 from dataclasses import dataclass
@@ -586,6 +587,11 @@ def report_speedup(
 
 
 def main():
+    # Waived on CUDA 13.1+ until https://github.com/NVIDIA/cuda-python/issues/2765 is fixed.
+    from cuda.bindings import driver as _d
+    if _d.cuDriverGetVersion()[1] >= 13010:
+        sys.exit(int(os.environ.get("CUDA_PYTHON_SAMPLE_WAIVER_EXIT_CODE", "2")))
+
     parser = argparse.ArgumentParser(
         description="Green Context sample using CUDA Core API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
