@@ -297,6 +297,7 @@ struct PreparedChildGraphUpdateState {
 
 GraphHandle create_graph_handle(CUgraph graph) {
     ensure_fn_table(FnTable::driver);  // the deleter calls the driver: resolve the table before it can run
+    raise_if_fill_interrupted();
     if (!graph) {
         return {};
     }

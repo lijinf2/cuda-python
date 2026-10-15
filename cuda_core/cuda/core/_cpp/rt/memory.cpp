@@ -474,6 +474,7 @@ DevicePtrHandle deviceptr_import_ipc(const MemoryPoolHandle& h_pool, const void*
         err = CUDA_ERROR_NOT_INITIALIZED;
         return {};
     }
+    raise_if_fill_interrupted();
 
     if (use_ipc_ptr_cache()) {
         ExportDataKey key;

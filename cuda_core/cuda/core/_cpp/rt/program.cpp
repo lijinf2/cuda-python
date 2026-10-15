@@ -129,6 +129,7 @@ NvrtcProgramHandle create_nvrtc_program_handle(nvrtcProgram prog) {
     // Resolve the table now, while the library that created `prog` is loaded,
     // so that the deleter never triggers a fill.
     ensure_fn_table(FnTable::nvrtc);
+    raise_if_fill_interrupted();
     auto box = std::shared_ptr<NvrtcProgramBox>(
         new NvrtcProgramBox{prog},
         [](NvrtcProgramBox* b) {
@@ -159,6 +160,7 @@ struct NvvmProgramBox {
 
 NvvmProgramHandle create_nvvm_program_handle(nvvmProgram prog) {
     ensure_fn_table(FnTable::nvvm);
+    raise_if_fill_interrupted();
     auto box = std::shared_ptr<NvvmProgramBox>(
         new NvvmProgramBox{{prog}},
         [](NvvmProgramBox* b) {
@@ -189,6 +191,7 @@ struct NvJitLinkBox {
 
 NvJitLinkHandle create_nvjitlink_handle(nvJitLink_t handle) {
     ensure_fn_table(FnTable::nvjitlink);
+    raise_if_fill_interrupted();
     auto box = std::shared_ptr<NvJitLinkBox>(
         new NvJitLinkBox{{handle}},
         [](NvJitLinkBox* b) {
@@ -219,6 +222,7 @@ struct CuLinkBox {
 
 CuLinkHandle create_culink_handle(CUlinkState state) {
     ensure_fn_table(FnTable::driver);
+    raise_if_fill_interrupted();
     auto box = std::shared_ptr<CuLinkBox>(
         new CuLinkBox{state},
         [](CuLinkBox* b) {

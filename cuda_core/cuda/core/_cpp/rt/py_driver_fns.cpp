@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <cstring>
 #include <mutex>
+#include <stdexcept>
 
 namespace cuda_core::rt {
 
@@ -279,6 +280,27 @@ void report_unavailable_fn(FnTable table, const char* name) noexcept {
         return;
     }
     report_message(message);
+}
+
+void raise_if_fill_interrupted() {
+    // ensure_fn_table() re-arms a KeyboardInterrupt with PyErr_SetInterrupt() (see above)
+    // instead of leaving it set, because it must return to a noexcept caller with no
+    // Python error pending. Left alone, that re-armed signal only surfaces once the
+    // interpreter's own periodic check happens to notice it, which a handful of
+    // trivial bytecodes later is not guaranteed.
+    //
+    // A caller that eagerly fills a table right after creating a resource (so its
+    // deleter never has to) is not noexcept and is declared `except+` to Cython, so it
+    // can call this immediately afterwards to convert that re-armed signal into a
+    // KeyboardInterrupt right now instead of waiting. PyErr_CheckSignals() builds the
+    // real exception and sets it with PyErr_Occurred(); throwing then lets Cython's
+    // generated __Pyx_CppExn2PyErr() carry it out, since that function leaves an
+    // already-set Python exception alone rather than replacing it, so the exception
+    // type thrown here is never seen by Python.
+    GILAcquireGuard gil;
+    if (gil.acquired() && PyErr_CheckSignals() < 0) {
+        throw std::runtime_error("cuda.core: interrupted while filling a function table");
+    }
 }
 
 }  // namespace cuda_core::rt

@@ -202,6 +202,15 @@ bool fn_table_error(FnTable table, char* buffer, std::size_t size) noexcept;
 // py_driver_fns.cpp.
 void report_unavailable_fn(FnTable table, const char* name) noexcept;
 
+// Call right after ensure_fn_table() at a call site that eagerly fills a table
+// (so a deleter never has to) and ignores the fill's own return value: those sites
+// are not noexcept and are declared `except+` to Cython. If the fill that just ran
+// was interrupted, this raises the KeyboardInterrupt immediately instead of
+// depending on the interpreter noticing the re-armed signal on its own at some
+// later bytecode boundary. A no-op if nothing is pending. Implemented in
+// py_driver_fns.cpp.
+void raise_if_fill_interrupted();
+
 namespace detail {
 
 // The status a trampoline returns in place of an unavailable function.
